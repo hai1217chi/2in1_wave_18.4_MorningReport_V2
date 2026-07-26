@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<title>每日 AI 晨報 Dashboard - 2026-07-19</title>
+<style>
+body { font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", Arial, sans-serif;
+       background:#f4f5f7; margin:0; padding:24px; color:#222; }
+h1 { font-size:22px; }
+.date { color:#888; margin-bottom:20px; }
+.grid { display:flex; flex-wrap:wrap; gap:16px; }
+.card { background:#fff; border-radius:12px; padding:18px 20px; width:320px;
+        box-shadow:0 1px 4px rgba(0,0,0,0.08); }
+.card h2 { margin:0 0 8px 0; font-size:18px; }
+.tag { display:inline-block; padding:2px 8px; border-radius:6px; font-size:12px;
+       background:#eef2ff; color:#3949ab; margin-right:6px; }
+.risk-NORMAL { background:#e8f5e9; color:#2e7d32; }
+.risk-CAUTION { background:#fff8e1; color:#f9a825; }
+.risk-HIGH_RISK { background:#ffebee; color:#c62828; }
+.risk-CRASH { background:#efebe9; color:#4e342e; }
+.signals { margin:10px 0; font-size:13px; color:#444; }
+.stocks { margin:10px 0; font-size:14px; }
+.one-liner { margin-top:10px; padding-top:10px; border-top:1px dashed #ddd;
+             font-size:13px; color:#555; line-height:1.5; font-weight:600; }
+.full-briefing { margin-top:10px; font-size:13px; }
+.full-briefing summary { cursor:pointer; color:#3949ab; font-weight:600; }
+.briefing-body { margin-top:10px; line-height:1.7; font-size:13px; color:#333; }
+.briefing-body h2, .briefing-body h3 { font-size:14px; margin:14px 0 6px 0; color:#1a237e; }
+.briefing-body p { margin:4px 0; }
+.market-card { width:100%; }
+.overview-card { width:100%; }
+.overview-card h3 { font-size:14px; margin:10px 0 4px 0; color:#1a237e; }
+.overview-card p { margin:4px 0; font-size:13px; line-height:1.7; }
+.market-card table { border-collapse:collapse; margin:6px 0 12px 0; font-size:13px; }
+.market-card td { padding:3px 10px 3px 0; }
+.market-card .up { color:#c62828; }
+.market-card .down { color:#2e7d32; }
+.archive { margin-top:30px; font-size:13px; }
+.archive a { color:#3949ab; text-decoration:none; margin-right:10px; }
+.disclaimer { margin-top:24px; font-size:12px; color:#999; }
+</style>
+</head>
+<body>
+<h1>📊 每日 AI 晨報 Dashboard</h1>
+<div class="date">2026-07-19 自動產生</div>
+<div class="grid">
+
+    <div class="card overview-card">
+        <h2>🗞️ 市場總覽</h2>
+        <h3>今天盤勢</h3>
+<br>
+<p>今日台股遭遇重挫，加權指數與櫃買指數跌幅均逾6%，顯著弱於國際市場表現，為近期罕見的大幅修正。美股昨日亦普遍收黑，道瓊、那斯達克、S&P500及費半SOX指數跌幅約在0.7%至1.6%之間，其中科技股與半導體類股跌勢相對較重。國際市場方面，VIX恐慌指數顯著飆升逾12%，反映市場避險情緒急遽升高。美元指數微幅走強，而美債10年期殖利率下跌，顯示資金有流向避險資產的趨勢。整體而言，今天的市場氛圍極度悲觀，台股在美股下跌的連動下，恐慌性賣壓湧現，與VIX飆升共同暗示全球風險胃納急遽收縮。</p>
+<br>
+<h3>國際新聞觀察</h3>
+<br>
+<p>1.  **台積電ADR重挫及AI支出疑慮：** 新聞指出台積電ADR大跌近5%，且有市場對AI支出前景產生疑慮。台積電作為台股權值王及全球AI供應鏈的關鍵角色，其ADR的劇烈修正，無疑對台股的電子族群和整體市場信心構成巨大壓力，是造成台股今日重挫的直接導火線之一。這暗示市場對於AI產業的長期展望與短期訂單成長性，可能出現重新評估。</p>
+<br>
+<p>2.  **NVIDIA晶片供不應求：** 輝達（NVIDIA）傳出內部晶片供不應求，甚至需執行長親自協調算力分配。這顯示AI需求依舊強勁，但同時也凸顯了供應鏈瓶頸的真實存在。對台股中與NVIDIA深度合作的半導體製造及AI伺服器相關供應商而言，短期可能面臨出貨壓力，然而，長期來看，AI趨勢不變，這類新聞仍可視為基本面需求強勁的證據，只是現階段面臨產能供給考驗。</p>
+    </div>
+    
+
+    <div class="card market-card">
+        <h2>🌍 市場快照</h2>
+        <b>台股</b><table><tr><td>加權指數</td><td>42671.27</td><td class="down">-6.47%</td></tr><tr><td>櫃買指數</td><td>378.44</td><td class="down">-7.02%</td></tr></table><b>美股</b><table><tr><td>道瓊</td><td>52146.42</td><td class="down">-0.77%</td></tr><tr><td>那斯達克</td><td>25520.24</td><td class="down">-1.4%</td></tr><tr><td>S&P500</td><td>7457.69</td><td class="down">-1.01%</td></tr><tr><td>費半SOX</td><td>11673.89</td><td class="down">-1.63%</td></tr></table><b>國際</b><table><tr><td>VIX恐慌指數</td><td>18.77</td><td class="up">12.19%</td></tr><tr><td>美元指數DXY</td><td>100.85</td><td class="up">0.1%</td></tr><tr><td>美債10年殖利率</td><td>4.54</td><td class="down">-0.61%</td></tr><tr><td>黃金</td><td>3999.3</td><td class="down">-0.33%</td></tr><tr><td>原油WTI</td><td>84.16</td><td class="up">2.02%</td></tr></table>
+    </div>
+    
+
+    <div class="card">
+        <h2>權值股</h2>
+        <span class="tag risk-CAUTION">風險模式：CAUTION</span>
+        <span class="tag">市場模式：BEAR</span>
+        <div class="signals">訊號分布：減碼:17檔 觀望:2檔 賣出:1檔</div>
+        <div class="stocks"><b>推薦關注：</b>2409 友達、^TWII 大盤 (加權指數)、2383 台光電</div>
+        <div class="one-liner">💡 面對大盤崩盤警告及普遍減碼訊號，權值股今日應採取全面防禦性策略，嚴格控制曝險，並將焦點放在風險管理與潛在相對優勢標的的持續觀察上。</div>
+        <details class="full-briefing">
+            <summary>📋 查看完整 AI 晨報內容</summary>
+            <div class="briefing-body"><h3>今日操作策略</h3>
+<br>
+<p>根據權值股的量化分析結果，市場正處於「BEAR」模式，並啟動了「Regime 崩盤警告」，主因大盤已跌破季線。在20檔權值股中，有17檔的最終決策為「🔴 減碼」，1檔為「🔴 賣出」，僅2檔為「觀望」。此訊號分佈明確指向市場全面進入高風險警戒，今日操作策略應以高度防禦性的「減碼」為主，並嚴格遵循風控訊號，避免不必要的曝險。</p>
+<br>
+<h3>類股輪動觀察</h3>
+<br>
+<p>目前「類股資金輪動熱度排行」顯示，「其他」和「ETF」類股熱度分數皆為50.0。根據模型的定義，分數低於35通常代表資金退潮警示。目前50.0的熱度分數，既不屬於資金高度集中的追捧狀態，也未達明顯退潮警示區間。這表示市場缺乏明確的類股領漲動能，資金分佈相對平均但缺乏積極性。在整體大盤發出崩盤警告的背景下，這種中性的類股熱度進一步確認了當前市場不適合追高，應保持觀望並謹慎配置。</p>
+<br>
+<h3>黑馬股觀察</h3>
+<br>
+<p>黑馬排行榜聚焦於短線爆發力訊號，但考量到目前大盤的減碼警示，這些個股應被視為在潛在波動放大時，需特別留意的標的，而非立即進場的推薦。</p>
+<br>
+<p>1.  **0050 元大台灣50 (HorseScore 60, ★★☆☆☆)：** 評分細項包含「BB擠壓」、「股數爆量>2倍」、「成交值爆量>2.5倍(資金流)」及「法人連買」。這顯示市場整體波動率壓縮到位，同時有顯著的成交量和資金流動，以及法人連續買超。作為ETF，其黑馬訊號更偏向反映大盤在短期內可能出現方向性選擇。</p>
+<p>2.  **2308 台達電 (HorseScore 45, ★☆☆☆☆)：** 其黑馬訊號為「BB擠壓」、「通道窄<10%分位」及「法人連買」。這表示股價經過一段時間的波動收斂，交易區間極窄，加上法人資金的連續買入，可能預示著短期內將脫離盤整區間，產生較大波動。</p>
+<p>3.  **2409 友達 (HorseScore 40, ★☆☆☆☆)：** 評分細項指出「BB擠壓」、「ADX>25」及「法人連買」。BB擠壓暗示波動將擴張，ADX>25則表示具備一定的趨勢強度，配合法人連買，顯示有機構資金在股價蓄勢階段進行佈局。</p>
+<br>
+<p>需特別提醒，黑馬評分是獨立於AI趨勢判斷之外的短線爆發力訊號，並不直接代表AI對其趨勢方向有高信心，尤其在當前大盤風控訊號強烈的情況下，操作上仍需極度謹慎。</p>
+<br>
+<h3>風險提醒</h3>
+<br>
+<p>當前市場風險極高。主要風險點在於：「市場模式」普遍為「BEAR」，且所有個股的「操作建議」幾乎都觸發了「🔴 Regime 崩盤警告｜大盤破季線，強制降至【減碼】」的風控訊號。這意味著系統性風險顯著上升，大盤技術面已轉弱。此外，多數個股的「AI上漲機率」偏低（普遍低於40%），「歷史波段勝率」亦不理想，且許多標的的「Profit Factor」和「Expectancy」呈現低值甚至負值，進一步印證了當前市場的下行壓力。廣達(2382)更直接發出「🔴 賣出」訊號，顯示其多週期動能同步走弱。整體而言，市場正處於高度警戒狀態，必須嚴格執行風險控制。</p>
+<br>
+<h3>推薦股票</h3>
+<br>
+<p>在當前市場全面減碼的防禦性策略下，以下推薦的個股並非建議立即進場，而是作為在嚴峻市場環境中，模型數據上相對值得「持續留意」或「列入觀察清單」的標的，以便在市場趨穩時能快速判斷潛在機會。</p>
+<br>
+<p>1.  **3481 群創：** 儘管最終決策為減碼，其擁有本次數據中最高的 Profit Factor (20.72) 和 Expectancy (14.16)，這顯示其過往交易策略的潛在效益極佳。同時，黑馬評分顯示BB擠壓與ADX>25，暗示波動可能即將放大。若大盤風控解除，群創有望因其優秀的獲利因子而展現更強的反彈潛力。</p>
+<p>2.  **2881 富邦金：** 同樣處於減碼訊號，但富邦金的 Profit Factor (9.92) 和 Expectancy (7.44) 表現優異，且歷史波段勝率達67%，為金融股中相對突出。在市場下行週期中，金融股通常被視為相對穩健的防禦性標的，其量化指標顯示出策略的相對有效性，值得納入觀察。</p>
+<p>3.  **2409 友達：** 在綜合排名中位居第一，擁有相對高的歷史波段勝率 (75%) 和不錯的 Profit Factor (3.73)。儘管當前受限於大盤風控強制降至減碼，其黑馬評分包含BB擠壓、ADX>25及法人連買，暗示潛在的短線蓄勢動能。友達可作為市場回穩後，值得首批關注並評估進場機會的標的。</p>
+<br>
+<h3>一句總結</h3>
+<br>
+<p>面對大盤崩盤警告及普遍減碼訊號，權值股今日應採取全面防禦性策略，嚴格控制曝險，並將焦點放在風險管理與潛在相對優勢標的的持續觀察上。</p></div>
+        </details>
+    </div>
+    
+
+    <div class="card">
+        <h2>AI概念股</h2>
+        <span class="tag risk-CAUTION">風險模式：CAUTION</span>
+        <span class="tag">市場模式：BEAR</span>
+        <div class="signals">訊號分布：減碼:28檔 觀望:11檔 賣出:4檔</div>
+        <div class="stocks"><b>推薦關注：</b>3443 創意、2449 京元電子、2395 研華</div>
+        <div class="one-liner">💡 在AI概念股面臨大盤破季線的「崩盤警告」與熊市模式下，現階段應全面實施風險控管，大幅降低持股，靜待市場風險訊號解除，再觀察具有歷史獲利效率或蓄勢待發黑馬訊號的個股。</div>
+        <details class="full-briefing">
+            <summary>📋 查看完整 AI 晨報內容</summary>
+            <div class="briefing-body"><h3>今日操作策略</h3>
+<p>根據AI概念股的量化數據顯示，目前市場整體操作訊號以「減碼」及「觀望」為主，更有部分個股觸發「賣出」訊號。值得注意的是，絕大多數個股的「最終決策」皆被「🔴 風控訊號，優先執行」所覆蓋，並明確指出「🔴 Regime 崩盤警告｜大盤破季線，強制降至【減碼】」。這表明當前大盤已跌破季線，觸發了整體市場的風險控制機制，建議應大幅降低持股水位，或至少維持觀望態度，嚴格控管風險。</p>
+<br>
+<h3>類股輪動觀察</h3>
+<p>AI概念股目前全部歸類於「其他」類股，其類股熱度分數為50.0分。此分數雖然未達資金退潮警示的35分以下，但亦非高度集中的熱門程度。在整體大盤發出「崩盤警告」的熊市（BEAR）模式下，此中等熱度分數顯示資金並未積極流入AI概念股，但也尚未出現大規模撤出的現象。這意味著在當前市場環境下，即使個股有短線爆發潛力，追高仍具較高風險，宜審慎操作，等待市場風險模式解除。</p>
+<br>
+<h3>黑馬股觀察</h3>
+<p>在黑馬排行榜中，有幾檔個股展現潛在的短線爆發力：</p>
+<br>
+<p>1.  **貿聯-KY (3665)** 及 **台達電 (2308)**：兩者皆以45分的HorseScore並列榜首，其評分細項包含「BB擠壓」、「通道窄<10%分位」以及「法人連買」。</p>
+<p>*   **BB擠壓與通道窄**：這是經典的波動壓縮訊號，表示股價經過一段時間的盤整，波動幅度收斂至極窄，通常預示著股價即將選擇方向，醞釀一波較大的行情。</p>
+<p>*   **法人連買**：顯示法人資金已開始進場佈局，為未來的股價上漲提供了潛在的動能。</p>
+<p>*   雖然兩者當前AI最終決策皆為「減碼」或「觀望」，但這些黑馬訊號暗示其在市場趨穩後，具備較好的短線表現潛力，值得放入追蹤名單。</p>
+<br>
+<p>2.  **技嘉 (2376)**：以35分的HorseScore居次，評分細項為「BB擠壓」與「通道窄<10%分位」。與貿聯-KY和台達電類似，技嘉也處於波動壓縮的狀態，具備短線突破的潛力。</p>
+<br>
+<p>需提醒的是，黑馬評分著重於短線爆發力訊號，不等同於AI對中長期趨勢方向的信心。在目前大盤風控訊號強烈的背景下，短線操作風險較高，務必謹慎評估。</p>
+<br>
+<h3>風險提醒</h3>
+<p>當前最重要的風險提示是「市場模式 (Market Mode)」已明確指示為「BEAR」（熊市），並且系統發出「🔴 Regime 崩盤警告｜大盤破季線，強制降至【減碼】」的強烈訊號。這是一個全面性的風險控管指令，表示整體市場環境不利於多頭操作。雖然部分個股的「風險模式」顯示為「NORMAL」，但只要市場模式維持熊市並有崩盤警告，所有操作都應以降低風險和保存資本為最高原則。此訊號優先於個股的任何潛在利多或預測動能。</p>
+<br>
+<h3>推薦股票</h3>
+<p>考量到當前市場處於「BEAR」模式並有「崩盤警告」的強力風控訊號，現階段不宜推薦積極買入。以下挑選的個股，是基於其在歷史表現、獲利效率或短線醞釀動能上，具備未來值得持續關注的潛力，而非建議立即進場。</p>
+<br>
+<p>1.  **瑞昱 (2379)**：儘管當前被強制減碼，但其「歷史波段勝率」高達80%，「Profit Factor」達27.87，以及「Expectancy」1.61，顯示其過往在有利市場環境下，具有極高的交易效率和獲利能力。未來若市場風險模式解除，瑞昱將是值得優先考慮的潛力標的。</p>
+<p>2.  **聯發科 (2454)**：同樣被強制減碼，但其「歷史波段勝率」為67%，「Profit Factor」5.46，以及「Expectancy」11.11，顯示這檔權值股在趨勢行情中表現穩健。作為台灣半導體產業的重要指標，一旦市場趨勢明確向上，聯發科有望率先回歸主流。</p>
+<p>3.  **貿聯-KY (3665)**：雖目前為觀望訊號，但其在「黑馬排行榜」中獲得最高分（HorseScore 45），並且評分細項明確指出「BB擠壓、通道窄<10%分位、法人連買」。這組合訊號暗示股價在經歷籌碼整理和波動壓縮後，有機會在市場情緒轉好時，出現較強的突破行情。</p>
+<p>4.  **台達電 (2308)**：與貿聯-KY相同，台達電也獲得HorseScore 45，並同樣有「BB擠壓、通道窄<10%分位、法人連買」的黑馬訊號。作為穩健的藍籌股，法人資金的連續買入以及股價的壓縮蓄勢，使其在後市有較大的觀察價值。</p>
+<br>
+<p>上述個股在市場轉多時具備較好的潛力，但在此熊市崩盤警告下，當前操作仍應保持極度保守。</p>
+<br>
+<h3>一句總結</h3>
+<p>在AI概念股面臨大盤破季線的「崩盤警告」與熊市模式下，現階段應全面實施風險控管，大幅降低持股，靜待市場風險訊號解除，再觀察具有歷史獲利效率或蓄勢待發黑馬訊號的個股。</p></div>
+        </details>
+    </div>
+    
+</div>
+<div class="archive">
+    <b>歷史紀錄：</b><a href="reports/2026-07-17.html">2026-07-17</a><a href="reports/2026-07-16.html">2026-07-16</a><a href="reports/2026-07-15.html">2026-07-15</a><a href="reports/2026-07-14.html">2026-07-14</a><a href="reports/2026-07-13.html">2026-07-13</a><a href="reports/2026-07-12.html">2026-07-12</a>
+</div>
+<div class="disclaimer">內容為量化模型 + AI 輸出，僅供參考，不構成投資建議。</div>
+</body>
+</html>
