@@ -239,6 +239,83 @@ def call_gemini(prompt: str, api_key: str) -> str:
         raise RuntimeError(f"Gemini 回傳格式異常，無法解析內容: {data}") from e
 
 
+def build_portfolio_prompt(merged_holdings: list, news_headlines: dict) -> str:
+    """
+    組出「持股操作建議」的 Prompt。跟一般類股分析不同的地方是：
+    這裡每一檔股票都帶著使用者自己的「買入成本」與「未實現損益」，
+    AI 給建議時要把持有成本、現有部位風險考慮進去（獲利豐厚 vs 已經套牢，風控邏輯不一樣）。
+    """
+    compact = []
+    for h in merged_holdings:
+        if not h.get("matched"):
+            compact.append({
+                "股號": h["stock_id"],
+                "名稱": h.get("company"),
+                "買入價": h.get("buy_price"),
+                "狀態": "本次分析未涵蓋此股票（可能流動性不足被引擎篩掉，或資料下載失敗）",
+            })
+            continue
+        compact.append({
+            "股號": h["stock_id"],
+            "名稱": h.get("company"),
+            "買入價": h.get("buy_price"),
+            "目前收盤": h.get("current_price"),
+            "未實現損益%": h.get("unrealized_pnl_pct"),
+            "AI上漲機率": h.get("up_prob"),
+            "歷史波段勝率": h.get("val_hit_rate"),
+            "交易信號": h.get("signal"),
+            "最終決策": h.get("final_decision"),
+            "操作建議": h.get("advice"),
+            "黑馬星等": h.get("horse_stars"),
+            "風險模式": h.get("risk_regime"),
+            "市場模式": h.get("market_mode"),
+        })
+
+    data_json = json.dumps(compact, ensure_ascii=False, indent=None)
+    news_json = json.dumps(news_headlines or {}, ensure_ascii=False, indent=None)
+
+    return f"""你是一位擁有20年以上經驗的基金經理人，正在協助使用者管理他「目前實際持有」的股票部位。
+
+以下是使用者持有的股票清單，包含買入成本、目前量化分析結果、未實現損益：
+
+{data_json}
+
+以下是「今日相關新聞標題」（可能不完整，僅供參考方向）：
+
+{news_json}
+
+請針對每一檔持股，撰寫繁體中文的「今日操作建議」，用 Markdown 格式，
+每一檔股票各自一個小節，標題格式為 "### 股號 名稱"，內容包含：
+
+- **目前狀況**：一句話說明目前損益與量化訊號（例如「已獲利15%，AI訊號轉為觀察」或「虧損8%，訊號偏空」）
+- **今日建議**：明確給出「加碼／續抱／減碼／停利／停損／觀望」其中一種傾向，並說明理由。
+  理由要結合量化訊號、新聞背景，以及使用者目前的持有成本與損益狀況
+  （例如已經套牢時的風控考量，跟已經有相當獲利時的停利考量不一樣）。
+- 如果該股票標示「本次分析未涵蓋」，就誠實說明沒有本次的量化數據可以參考，
+  只能給出非常概略、保守的提醒，不要編造任何數據。
+
+全部持股都寫完後，最後加一段 "## 持股總結"，簡短總結整體持股的風險狀況
+（例如整體是獲利還是虧損、有沒有需要優先處理的部位）。
+
+注意：
+- 這是協助解讀數據與新聞，不是正式投資建議，語氣可以專業但保守。
+- 直接輸出內容本身，不要加開場白。
+"""
+
+
+def generate_portfolio_briefing(merged_holdings: list, news_headlines: dict | None = None) -> str:
+    """對外進入點：輸入合併後的持股資料 + 新聞，回傳持股操作建議 Markdown 文字。"""
+    api_key = os.environ.get("GEMINI_API_KEY")
+    if not api_key:
+        raise RuntimeError("找不到環境變數 GEMINI_API_KEY，請確認 GitHub Secrets 有設定。")
+
+    if not merged_holdings:
+        return "⚠️ 沒有讀到任何持股資料。"
+
+    prompt = build_portfolio_prompt(merged_holdings, news_headlines or {})
+    return call_gemini(prompt, api_key)
+
+
 def generate_market_overview(market_snapshot: dict | None, news_headlines: dict | None) -> str:
     """
     生成「市場總覽」（今天盤勢 + 國際新聞觀察），不管要分析幾個類股，這個只呼叫一次 Gemini。

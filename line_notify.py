@@ -69,6 +69,12 @@ def build_digest_message(category_results: list, market_overview: str) -> str:
         briefing = r.get("ai_briefing", "")
         blocks.append(f"━━━━━━━━━━\n【{tab_name}】\n")
 
+        if tab_name == "我的持股":
+            # 持股操作建議的格式（每檔一個 ### 小節 + 最後的持股總結）跟一般類股不同，
+            # 沒有「今日操作策略」這類標準章節，直接放完整內容即可（通常持股數不多，不會太長）
+            blocks.append(briefing + "\n")
+            continue
+
         for label, heading in sections_to_include:
             content = ai_report.extract_section(briefing, heading)
             if content:

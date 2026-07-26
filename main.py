@@ -34,6 +34,7 @@ import ai_report
 import market
 import report_pdf
 import dashboard
+import portfolio
 
 # ------------------------------------------------------------------
 # 要跑哪些類股清單（對應 app.py 裡 CATEGORY_GID_MAP 的 gid）
@@ -43,11 +44,15 @@ import dashboard
 CATEGORIES = {
     "權值股": "630045424",
     # "面板股": "1749860219",
-    "AI概念股": "0",
+    # "AI概念股": "0",
     # "國防自主概念": "2037567856",
     # "低軌衛星概念股": "1594256368",
     # "無人機概念股": "327999020",
 }
+
+# 持股清單分頁 gid（A=股號 B=公司名稱 C=類股 D=買入價格）
+# 設成 None 就會完全略過持股操作建議這個功能
+PORTFOLIO_GID = "213589368"
 
 RESEND_API_URL = "https://api.resend.com/emails"
 
@@ -123,6 +128,69 @@ def run_one_category(tab_name: str, gid: str, market_overview: str) -> dict:
     }
 
 
+def run_portfolio_analysis(market_overview: str, news_headlines: dict) -> dict | None:
+    """
+    讀取持股清單 → 用 custom_codes 方式重新跑一次量化分析（不管持股屬於哪個類股都能拿到最新數據）
+    → 合併買入成本算出未實現損益 → 生成「持股操作建議」。
+    任何一步失敗都回傳 None，不影響其他類股正常寄送。
+    """
+    if not PORTFOLIO_GID:
+        return None
+
+    print("\n💼 讀取持股清單...")
+    try:
+        holdings = portfolio.load_portfolio(sheet_id=engine.SHEET_ID, gid=PORTFOLIO_GID)
+    except Exception as e:
+        print(f"⚠️ 讀取持股清單失敗（{e}），略過持股操作建議。", file=sys.stderr)
+        return None
+
+    if not holdings:
+        print("ℹ️ 持股清單目前沒有任何資料，略過持股操作建議。")
+        return None
+
+    custom_codes = portfolio.build_custom_codes(holdings)
+    print(f"🚀 開始分析持股清單（共 {len(holdings)} 檔：{custom_codes}）...")
+    try:
+        output_file, summary_data, _ = engine.run_analysis(
+            gid=None,
+            tab_name="我的持股",
+            custom_codes=custom_codes,
+            sheet_id=engine.SHEET_ID,
+        )
+    except Exception as e:
+        print(f"⚠️ 持股分析失敗（{e}），略過持股操作建議。", file=sys.stderr)
+        return None
+
+    merged = portfolio.merge_with_analysis(holdings, summary_data)
+
+    print("🤖 呼叫 Gemini 生成持股操作建議...")
+    try:
+        portfolio_briefing = ai_report.generate_portfolio_briefing(merged, news_headlines)
+    except Exception as e:
+        print(f"⚠️ 持股操作建議生成失敗（{e}）。", file=sys.stderr)
+        portfolio_briefing = "（持股操作建議生成失敗，請見附件 Excel 數據。）"
+
+    pdf_path = None
+    if output_file:
+        try:
+            pdf_path = report_pdf.markdown_to_pdf(
+                f"{market_overview}\n\n{portfolio_briefing}",
+                output_path=f"./AI晨報_我的持股_{datetime.now().strftime('%Y%m%d')}.pdf",
+                title=f"我的持股 AI 操作建議 {datetime.now().strftime('%Y-%m-%d')}",
+            )
+            print(f"📄 持股 PDF 已產生：{pdf_path}")
+        except Exception as e:
+            print(f"⚠️ 持股 PDF 產生失敗（{e}）。", file=sys.stderr)
+
+    return {
+        "tab_name": "我的持股",
+        "excel_path": output_file,
+        "pdf_path": pdf_path,
+        "ai_briefing": portfolio_briefing,
+        "summary_data": summary_data,
+    }
+
+
 def send_email_with_report(category_results: list, market_overview: str) -> None:
     api_key = os.environ["RESEND_API_KEY"]
     today = datetime.now().strftime("%Y-%m-%d")
@@ -131,9 +199,10 @@ def send_email_with_report(category_results: list, market_overview: str) -> None
     sections_html = []
 
     for r in category_results:
-        with open(r["excel_path"], "rb") as f:
-            encoded_excel = base64.b64encode(f.read()).decode("utf-8")
-        attachments.append({"filename": os.path.basename(r["excel_path"]), "content": encoded_excel})
+        if r.get("excel_path") and os.path.exists(r["excel_path"]):
+            with open(r["excel_path"], "rb") as f:
+                encoded_excel = base64.b64encode(f.read()).decode("utf-8")
+            attachments.append({"filename": os.path.basename(r["excel_path"]), "content": encoded_excel})
 
         if r.get("pdf_path") and os.path.exists(r["pdf_path"]):
             with open(r["pdf_path"], "rb") as f:
@@ -225,6 +294,13 @@ def main() -> None:
         category_results.append(result)
         print(f"--- {tab_name} 專屬分析預覽 ---")
         print(result["ai_briefing"])
+        print("------------------------")
+
+    portfolio_result = run_portfolio_analysis(market_overview, news_headlines)
+    if portfolio_result:
+        category_results.append(portfolio_result)
+        print("--- 我的持股 操作建議預覽 ---")
+        print(portfolio_result["ai_briefing"])
         print("------------------------")
 
     send_email_with_report(category_results, market_overview)
