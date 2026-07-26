@@ -43,7 +43,16 @@ def load_portfolio(sheet_id: str, gid: str = "213589368") -> list:
             except (ValueError, TypeError):
                 buy_price = None
 
-        stock_id = raw_id.replace(".TW", "").replace(".TWO", "")
+        # 大小寫不敏感地去掉 .TW / .TWO 後綴，並統一轉大寫，
+        # 確保跟 engine.py（build_custom_stock_list 內部固定用 token.upper() 處理）算出來的
+        # stock_id 格式完全一致，不管 Google Sheet 裡是打 .tw、.TW 還是 .Tw 都能正確比對。
+        upper_id = raw_id.upper()
+        if upper_id.endswith(".TWO"):
+            stock_id = upper_id[:-4]
+        elif upper_id.endswith(".TW"):
+            stock_id = upper_id[:-3]
+        else:
+            stock_id = upper_id
         holdings.append({
             "raw_ticker": raw_id,
             "stock_id": stock_id,
