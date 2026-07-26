@@ -749,16 +749,21 @@ def load_stock_list(gid: str = None, sheet_id: str = None) -> list:
     return stocks
 
 
-def build_custom_stock_list(codes_text: str) -> list:
+def build_custom_stock_list(codes_text: str, company_map: dict = None) -> list:
     """
-    【自選股】依使用者輸入的股號字串組出 stocks 清單，格式與 load_stock_list() 相同：
+    【自選股/持股】依使用者輸入的股號字串組出 stocks 清單，格式與 load_stock_list() 相同：
     [(ticker, stock_id, company), ...]
     輸入範例："2330,2317,0050" 或 "2330.TW,6488.TWO,0050.TW"（可用逗號、頓號、空白、換行分隔）。
     未指定副檔市場時，預設補上 .TW（上市）；OTC(上櫃)個股請自行加上 .TWO。
-    公司名稱會嘗試透過 yfinance 自動查詢，查不到則以股號代替。
+    ETF：股號開頭為 "00"（例如 0050、006208、00929）會在後續分類階段自動歸類為「ETF」類股，
+    不需要額外處理，直接把 ETF 股號加進 codes_text 即可。
+
+    company_map：選填，{stock_id: 中文公司名稱} 對照表（例如持股清單 Google Sheet 的 B 欄）。
+    有提供且該股號有值時，直接使用這個中文名稱；否則才 fallback 去查 yfinance（通常只有英文名稱）。
     """
     if not codes_text or not str(codes_text).strip():
         return []
+    company_map = company_map or {}
     raw = re.split(r"[,\uff0c、\s]+", codes_text.strip())
     stocks = []
     seen = set()
@@ -776,14 +781,18 @@ def build_custom_stock_list(codes_text: str) -> list:
             continue
         seen.add(stock_id)
 
-        company = stock_id
-        try:
-            info = yf.Ticker(ticker).info
-            name = info.get("longName") or info.get("shortName")
-            if name:
-                company = name
-        except Exception:
-            pass
+        hinted_name = str(company_map.get(stock_id, "")).strip()
+        if hinted_name and hinted_name.lower() != "nan":
+            company = hinted_name
+        else:
+            company = stock_id
+            try:
+                info = yf.Ticker(ticker).info
+                name = info.get("longName") or info.get("shortName")
+                if name:
+                    company = name
+            except Exception:
+                pass
         stocks.append((ticker, stock_id, company))
     print(f"✅ 自選股清單共 {len(stocks)} 檔：{[s[1] for s in stocks]}")
     return stocks
@@ -2692,17 +2701,20 @@ def build_output_filename(tab_name: str) -> str:
     return f"{base}_{seq:02d}.xlsx"
 
 def run_analysis(gid: str = None, tab_name: str = None, custom_codes: str = None,
-                  sheet_id: str = None, output_dir: str = ".", progress_cb=None):
+                  sheet_id: str = None, output_dir: str = ".", progress_cb=None,
+                  custom_company_map: dict = None):
     """
     可重複呼叫的分析入口（供 Gradio 等外部介面使用）。
 
     參數：
       gid          Google Sheet 分頁 gid（與 custom_codes 擇一使用；custom_codes 優先）
-      tab_name     報表/分頁顯示用的名稱（例如「權值股」「自選股」）
+      tab_name     報表/分頁顯示用的名稱（例如「權值股」「自選股」「我的持股」）
       custom_codes 自選股股號字串（例如 "2330,2317,0050"），有值時優先於 gid 讀 Google Sheet
       sheet_id     覆寫 Google Sheet 檔案 ID（預設用模組內建 SHEET_ID）
       output_dir   Excel 報告輸出資料夾
       progress_cb  進度回呼 function(idx:int, total:int, stock_id:str, company:str, message:str)
+      custom_company_map  選填，{stock_id: 中文公司名稱} 對照表，只在有給 custom_codes 時生效，
+                           用來避免自選股/持股清單顯示成 yfinance 查到的英文公司名稱。
 
     回傳：(output_file_path, summary_data, val_data_all) — 任一步驟失敗則回傳 (None, [], [])
     """
@@ -2722,7 +2734,7 @@ def run_analysis(gid: str = None, tab_name: str = None, custom_codes: str = None
     print("="*65)
 
     if custom_codes and str(custom_codes).strip():
-        stocks = build_custom_stock_list(custom_codes)
+        stocks = build_custom_stock_list(custom_codes, company_map=custom_company_map)
     else:
         stocks = load_stock_list(gid=gid, sheet_id=sheet_id)
     if not stocks:

@@ -149,12 +149,14 @@ def run_portfolio_analysis(market_overview: str, news_headlines: dict) -> dict |
         return None
 
     custom_codes = portfolio.build_custom_codes(holdings)
+    company_map = portfolio.build_company_map(holdings)
     print(f"🚀 開始分析持股清單（共 {len(holdings)} 檔：{custom_codes}）...")
     try:
         output_file, summary_data, _ = engine.run_analysis(
             gid=None,
             tab_name="我的持股",
             custom_codes=custom_codes,
+            custom_company_map=company_map,
             sheet_id=engine.SHEET_ID,
         )
     except Exception as e:

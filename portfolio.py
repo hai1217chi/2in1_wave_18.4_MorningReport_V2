@@ -61,6 +61,15 @@ def build_custom_codes(holdings: list) -> str:
     return ",".join(h["raw_ticker"] for h in holdings if h.get("raw_ticker"))
 
 
+def build_company_map(holdings: list) -> dict:
+    """
+    把持股清單的 B 欄中文公司名稱組成 {stock_id: 中文名稱} 對照表，
+    交給 engine.run_analysis(custom_company_map=...)，這樣報告裡就會顯示
+    Google Sheet 上填的中文名稱，而不是 yfinance 查到的英文名稱。
+    """
+    return {h["stock_id"]: h["company"] for h in holdings if h.get("company")}
+
+
 def merge_with_analysis(holdings: list, summary_data: list) -> list:
     """
     把持股的買入價格，跟本次量化分析結果（用 stock_id 對應）合併，
