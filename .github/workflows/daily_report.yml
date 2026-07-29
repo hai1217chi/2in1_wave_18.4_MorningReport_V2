@@ -6,6 +6,11 @@ on:
     - cron: "50 21 * * 0-5"
   # 允許在 GitHub 網頁上手動按按鈕，馬上跑一次來測試
   workflow_dispatch:
+  # 🟢 新增此區塊：允許 Cloudflare Worker 透過 LINE 觸發
+  repository_dispatch:
+    types: [run-report]
+
+
 
 # 需要 write 權限，讓 workflow 最後可以把 docs/（Dashboard 網頁）commit 回 repo
 permissions:
