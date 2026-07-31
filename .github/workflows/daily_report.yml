@@ -19,7 +19,7 @@ permissions:
 jobs:
   run-report:
     runs-on: ubuntu-latest
-steps:
+ steps:
   # STREAMING_CHUNK:Checking out repository code...
   - name: Checkout code
     uses: actions/checkout@v4
