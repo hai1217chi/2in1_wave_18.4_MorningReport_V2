@@ -1,33 +1,56 @@
 import os
-import sys
 import requests
 import yfinance as yf
 
 # ==========================================
-# 1. 抓取股票市場真實行情數據
+# 1. 股票名稱轉代號 (Yahoo Search API)
+# ==========================================
+def resolve_stock_id(query):
+    """
+    判斷輸入的是代號還是中文名稱。
+    如果是中文，透過 Yahoo Search API 找回對應的台股代號。
+    """
+    query = str(query).strip()
+    
+    # 如果已經是 4 位純數字，直接回傳
+    if query.isdigit() and len(query) == 4:
+        return query
+        
+    # 如果是中文名稱，去 Yahoo 查代碼
+    url = f"https://query2.finance.yahoo.com/v1/finance/search?q={query}&quotesCount=5&country=Taiwan"
+    headers = {'User-Agent': 'Mozilla/5.0'}
+    
+    try:
+        res = requests.get(url, headers=headers, timeout=5)
+        if res.status_code == 200:
+            quotes = res.json().get('quotes', [])
+            for q in quotes:
+                symbol = q.get('symbol', '')
+                # 確保只抓台灣上市(.TW)或上櫃(.TWO)的股票
+                if symbol.endswith('.TW') or symbol.endswith('.TWO'):
+                    return symbol.split('.')[0]
+    except Exception as e:
+        print(f"⚠️ 名稱轉換代碼失敗: {e}")
+        
+    return None
+
+# ==========================================
+# 2. 抓取股票市場真實行情數據
 # ==========================================
 def fetch_stock_market_data(stock_id):
-    """
-    透過 yfinance 抓取台灣股票最新行情數據 (支援上市/上櫃)
-    """
-    # 預設加上台股上市代號 (.TW)
     ticker_symbol = f"{stock_id}.TW" if not stock_id.endswith((".TW", ".TWO")) else stock_id
     ticker = yf.Ticker(ticker_symbol)
     
-    # 抓取最近 5 天資料 (避免遇到假日無資料)
     df = ticker.history(period="5d")
     
-    # 若上市查無資料，嘗試上櫃代號 (.TWO)
     if df.empty or len(df) < 2:
         ticker_symbol = f"{stock_id}.TWO"
         ticker = yf.Ticker(ticker_symbol)
         df = ticker.history(period="5d")
     
     if df.empty or len(df) < 2:
-        print(f"❌ 查無股票 {stock_id} 的行情資料，請確認代號是否正確。")
         return None
 
-    # 取最新兩日資料計算價差與漲跌幅
     latest_row = df.iloc[-1]
     prev_row = df.iloc[-2]
 
@@ -45,12 +68,9 @@ def fetch_stock_market_data(stock_id):
     }
 
 # ==========================================
-# 2. 組合 LINE 訊息內容
+# 3. 組合 LINE 訊息內容
 # ==========================================
-def format_stock_report(stock_id, close_price, change_price, change_pct, trend_signal="", conclusion=""):
-    """
-    組裝包含最新收盤價與今日漲跌幅的完整 LINE 報表訊息
-    """
+def format_stock_report(original_query, stock_id, close_price, change_price, change_pct, trend_signal="", conclusion=""):
     if change_pct > 0:
         icon = "🔺"
         change_str = f"+{change_price:.2f} (+{change_pct:.2f}%)"
@@ -62,7 +82,7 @@ def format_stock_report(stock_id, close_price, change_price, change_pct, trend_s
         change_str = "0.00 (0.00%)"
 
     message = (
-        f"📊 【每日個股早報 - {stock_id}】\n"
+        f"📊 【個股量化早報 - {original_query} ({stock_id})】\n"
         f"------------------------------\n"
         f"💰 最新收盤價：{close_price:,.2f} 元\n"
         f"📈 今日漲跌幅：{icon} {change_str}\n"
@@ -77,17 +97,12 @@ def format_stock_report(stock_id, close_price, change_price, change_pct, trend_s
     return message
 
 # ==========================================
-# 3. 發送 LINE Message API 推播
+# 4. 發送 LINE Message API 推播
 # ==========================================
 def send_line_push(text):
-    """
-    呼叫 LINE Messaging API 發送推播訊息給使用者
-    """
     token = os.getenv("LINE_CHANNEL_ACCESS_TOKEN")
     user_id = os.getenv("USER_ID")
-
     if not token or not user_id:
-        print("⚠️ 未正確設定 LINE_CHANNEL_ACCESS_TOKEN 或 USER_ID 環境變數！")
         return
 
     url = "https://api.line.me/v2/bot/message/push"
@@ -99,31 +114,29 @@ def send_line_push(text):
         "to": user_id,
         "messages": [{"type": "text", "text": text}]
     }
-
-    try:
-        res = requests.post(url, json=payload, headers=headers, timeout=10)
-        if res.status_code == 200:
-            print("✅ LINE 訊息推播成功！")
-        else:
-            print(f"❌ LINE 發送失敗 ({res.status_code}): {res.text}")
-    except Exception as e:
-        print(f"❌ 發送 LINE 訊息時發生例外錯誤: {e}")
+    requests.post(url, json=payload, headers=headers, timeout=10)
 
 # ==========================================
-# 4. 主程式執行邏輯
+# 5. 主程式執行邏輯
 # ==========================================
 if __name__ == "__main__":
-    # 1. 讀取 GitHub Actions 傳入的 STOCK_ID (預設為 2330)
-    raw_stock = os.getenv("STOCK_ID", "2330").strip()
-    stock_id = raw_stock if raw_stock and raw_stock != "DEFAULT" else "2330"
+    # 接收從 LINE 傳過來的關鍵字 (可能是 6414 也可能是 緯穎)
+    raw_query = os.getenv("STOCK_ID", "2330").strip()
+    
+    # 將中文名稱轉換為台股代碼
+    stock_id = resolve_stock_id(raw_query)
 
-    print(f"🚀 開始執行分析流程，目標標的：{stock_id}...")
+    if not stock_id:
+        send_line_push(f"❌ 查無此股票：「{raw_query}」，請確認名稱或代號是否正確。")
+        exit()
 
-    # 2. 抓取真實市場數據
+    print(f"🚀 目標標的：{raw_query} -> 對應代碼: {stock_id}...")
+
+    # 抓取真實市場數據
     market_data = fetch_stock_market_data(stock_id)
 
     if market_data:
-        # 3. 根據漲跌動態示範分析訊號 (此處可替換為你的量化模型邏輯/HorseFinder)
+        # 示範量化分析訊號 (此處可替換為你的 HorseFinder 邏輯)
         if market_data['change_pct'] > 1.0:
             signal = "多頭強勢突破"
             conclusion = "短線放量上揚，均線多頭排列，可關注續強拉升機會。"
@@ -134,8 +147,8 @@ if __name__ == "__main__":
             signal = "區間震盪整理"
             conclusion = "股價波動平緩，籌碼沉澱中，維持觀望或波段操作。"
 
-        # 4. 格式化訊息內容
         report = format_stock_report(
+            original_query=raw_query,
             stock_id=market_data['stock_id'],
             close_price=market_data['close_price'],
             change_price=market_data['change_price'],
@@ -144,9 +157,6 @@ if __name__ == "__main__":
             conclusion=conclusion
         )
 
-        # 5. 發送 LINE 訊息
         send_line_push(report)
     else:
-        # 失敗通知
-        error_msg = f"⚠️ 無法取得股票 {stock_id} 的最新行情，請檢查代號是否正確。"
-        send_line_push(error_msg)
+        send_line_push(f"⚠️ 無法取得股票 {stock_id} ({raw_query}) 的最新行情。")
