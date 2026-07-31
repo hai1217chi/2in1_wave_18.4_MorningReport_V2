@@ -1,7 +1,9 @@
 import os
 import sys
 import re
+import traceback
 import requests
+import runpy
 
 # ==========================================
 # 1. 公司名稱與股號查表／轉換 (支援名稱與代號)
@@ -13,7 +15,7 @@ def resolve_stock_id(query):
     if re.match(r'^\d{4,6}$', query):
         return query, f"股號 {query}"
     
-    # 常用關鍵字快速映射 (可根據需求擴充)
+    # 常用關鍵字快速映射
     common_stocks = {
         "台積電": "2330", "鴻海": "2317", "聯發科": "2454", "廣達": "2382",
         "緯創": "3231", "技嘉": "2376", "長榮": "2603", "陽明": "2609",
@@ -96,16 +98,9 @@ def fetch_stock_market_data(stock_id):
     return None
 
 # ==========================================
-# 3. 整合量化模型分析 (呼叫 engine.py 或波段邏輯)
+# 3. 整合量化模型分析 (對接 engine.py 或預設波段邏輯)
 # ==========================================
 def analyze_quantitative_stock(stock_id, market_data):
-    """
-    對接原專案 engine.py 或是 2in1_wave 波段演算法
-    """
-    close_price = market_data['close_price']
-    change_pct = market_data['change_pct']
-    
-    # 試圖引用專案內的 engine 邏輯
     try:
         import engine
         if hasattr(engine, 'run_stock_analysis'):
@@ -113,7 +108,7 @@ def analyze_quantitative_stock(stock_id, market_data):
     except Exception as e:
         print(f"未找到自訂 engine 模組或執行出錯，採用預設 2in1 波段量化邏輯: {e}")
 
-    # --- 預設 2in1 Wave 18.4 波段量化分析邏輯 ---
+    change_pct = market_data['change_pct']
     if change_pct >= 3.0:
         trend = "🔥 多頭強勢衝刺 (HorseFinder 強勢訊號)"
         highlights = (
@@ -194,24 +189,59 @@ def send_line_push(text, target_user_id=None):
         "to": user_id,
         "messages": [{"type": "text", "text": text}]
     }
-    res = requests.post(url, json=payload, headers=headers, timeout=10)
-    print(f"LINE API 推播回應狀態碼: {res.status_code}")
+    try:
+        res = requests.post(url, json=payload, headers=headers, timeout=10)
+        print(f"LINE API 推播回應狀態碼: {res.status_code}")
+    except Exception as e:
+        print(f"LINE 推播發送失敗: {e}")
 
 # ==========================================
-# 6. 全盤晨報執行 (僅在輸入「執行」時調用)
+# 6. 全盤晨報執行 (採用 runpy 啟動獨立晨報檔)
 # ==========================================
-def run_full_morning_report():
+def run_full_morning_report(target_user_id=None):
     print("🌅 開始執行全盤晨報與寄送信件流程...")
-    try:
-        # 如果原程式中有 ai_report 或 main 的晨報流程，在這裡執行
-        import ai_report
-        if hasattr(ai_report, 'main'):
-            ai_report.main()
-        print("✅ 晨報與寄信執行完畢！")
-        send_line_push("🟢 全盤晨報與 Email 報告已順利發送完成！")
-    except Exception as e:
-        print(f"❌ 執行晨報發生例外: {e}")
-        send_line_push(f"❌ 全盤晨報發送失敗: {e}")
+    
+    # 自動尋找專案內常見的晨報檔名
+    candidate_files = [
+        "ai_report.py",
+        "morning_report.py",
+        "2in1_wave_report.py",
+        "report.py",
+        "run_report.py"
+    ]
+    
+    executed = False
+    for file_name in candidate_files:
+        if os.path.exists(file_name):
+            print(f"🎯 找到晨報腳本: {file_name}，準備執行...")
+            try:
+                # 使用 runpy 以 __main__ 模式執行整個檔案
+                runpy.run_path(file_name, run_name="__main__")
+                executed = True
+                print(f"✅ {file_name} 執行成功！")
+                break
+            except Exception as e:
+                err_detail = traceback.format_exc()
+                print(f"❌ 執行 {file_name} 發生例外:\n{err_detail}")
+                send_line_push(f"❌ 全盤晨報發送失敗 ({file_name}):\n{str(e)}", target_user_id)
+                return
+
+    if not executed:
+        # 後備方式：嘗試以 import ai_report 執行
+        try:
+            import ai_report
+            if hasattr(ai_report, 'main'):
+                ai_report.main()
+                executed = True
+        except Exception as e:
+            print(f"嘗試載入 ai_report 模組失敗: {e}")
+
+    if executed:
+        send_line_push("🟢 全盤晨報與 Email 報告已順利發送完成！", target_user_id)
+    else:
+        msg = "⚠️ 未在專案根目錄找到晨報腳本（如 ai_report.py），請確認專案中晨報主程式的檔名。"
+        print(msg)
+        send_line_push(msg, target_user_id)
 
 # ==========================================
 # 主進入點
@@ -221,31 +251,22 @@ if __name__ == "__main__":
     stock_query = os.getenv("STOCK_QUERY", "").strip()
     target_user_id = os.getenv("TARGET_USER_ID", "").strip()
 
-    print(f"🤖 執行模式: {run_mode} | 查詢內容: '{stock_query}'")
+    print(f"🤖 執行模式: {run_mode} | 查詢內容: '{stock_query}' | 目标用戶: {target_user_id}")
 
     if run_mode == "morning_report":
-        # 執行晨報 & 寄信
-        run_full_morning_report()
+        run_full_morning_report(target_user_id)
     else:
-        # 個股查詢模式 (預設 2330)
         if not stock_query or stock_query == "DEFAULT":
             stock_query = "2330"
 
-        # 1. 解析股號
         stock_id, resolved_name = resolve_stock_id(stock_query)
         print(f"🔎 正在分析個股：{resolved_name} (代號: {stock_id})")
 
-        # 2. 抓取行情
         market_data = fetch_stock_market_data(stock_id)
 
         if market_data:
-            # 3. 進行量化分析
             trend, highlights, conclusion = analyze_quantitative_stock(stock_id, market_data)
-
-            # 4. 組裝訊息
             line_msg = build_line_message(market_data, trend, highlights, conclusion)
-
-            # 5. 推播回 LINE
             send_line_push(line_msg, target_user_id)
         else:
             err_msg = f"❌ 無法取得股票「{stock_query}」({stock_id}) 的當日行情資料，請確認名稱或股號是否正確。"
