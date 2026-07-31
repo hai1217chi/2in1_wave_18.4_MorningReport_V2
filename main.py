@@ -39,7 +39,7 @@ import portfolio
 CATEGORIES = {
     "權值股": "630045424",
     # "面板股": "1749860219",
-    "AI概念股": "0",
+    # "AI概念股": "0",
     # "國防自主概念": "2037567856",
     # "低軌衛星概念股": "1594256368",
     # "無人機概念股": "327999020",
@@ -491,6 +491,47 @@ def update_dashboard_safe(category_results: list, market_snapshot: dict, market_
 
 
 # ==========================================
+# 持股分析單獨執行入口
+# ==========================================
+def run_portfolio_flow(target_user_id=None):
+    """僅執行持股清單分析，並將 AI 操作建議推播至 LINE。"""
+    print("💼 開始執行持股清單量化分析與 AI 建議...")
+    market_snapshot, news_headlines = fetch_market_context()
+
+    print("🤖 呼叫 Gemini 生成市場總覽...")
+    try:
+        market_overview = ai_report.generate_market_overview(market_snapshot, news_headlines)
+    except Exception as e:
+        print(f"⚠️ 市場總覽生成失敗（{e}），改用預設文字。", file=sys.stderr)
+        market_overview = "## 市場總覽\n（市場總覽生成失敗）"
+
+    portfolio_result = run_portfolio_analysis(market_overview, news_headlines)
+
+    if not portfolio_result:
+        err_msg = "⚠️ 無法讀取持股清單或持股內容為空，請確認 Google Sheets 內容與 PORTFOLIO_GID 設定。"
+        print(err_msg)
+        send_line_push(err_msg, target_user_id)
+        return
+
+    # 1. 寄送持股 Email 報告
+    try:
+        send_email_with_report([portfolio_result], market_overview)
+    except Exception as e:
+        print(f"⚠️ 持股 Email 發送失敗: {e}")
+
+    # 2. 推播持股分析至 LINE
+    briefing = portfolio_result.get("ai_briefing", "")
+    line_msg = f"💼 【2in1 持股 AI 操作建議報告】\n----------------------------------\n{briefing}"
+    
+    # 防範訊息過長超出 LINE 單次發送上限 (4000字截斷)
+    if len(line_msg) > 3800:
+        line_msg = line_msg[:3750] + "\n\n...(內容較長，完整 PDF/Excel 報告已寄至您的 Email)"
+
+    send_line_push(line_msg, target_user_id)
+    print("🟢 持股分析報告已成功發送！")
+
+
+# ==========================================
 # 全盤晨報主執行入口
 # ==========================================
 def run_morning_report_main(target_user_id=None):
@@ -545,6 +586,8 @@ if __name__ == "__main__":
     try:
         if run_mode == "morning_report":
             run_morning_report_main(target_user_id)
+        elif run_mode in ["portfolio", "my_holdings"]:
+            run_portfolio_flow(target_user_id)
         else:
             run_single_stock_flow(stock_query, target_user_id)
     except Exception as err:
