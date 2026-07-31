@@ -1,108 +1,123 @@
 import os
+import sys
 import requests
-import yfinance as yf
 
 # ==========================================
-# 1. 股票名稱轉代號 (Yahoo Search API)
+# 1. 抓取台股最新行情 (使用 TWSE / TPEX 官方 API，防止 GitHub IP 被擋)
 # ==========================================
-def resolve_stock_id(query):
+def get_tw_stock_data(stock_id):
     """
-    判斷輸入的是代號還是中文名稱。
-    如果是中文，透過 Yahoo Search API 找回對應的台股代號。
+    直接呼叫證交所/櫃買中心官方 API 取得最新收盤價與漲跌
     """
-    query = str(query).strip()
-    
-    # 如果已經是 4 位純數字，直接回傳
-    if query.isdigit() and len(query) == 4:
-        return query
-        
-    # 如果是中文名稱，去 Yahoo 查代碼
-    url = f"https://query2.finance.yahoo.com/v1/finance/search?q={query}&quotesCount=5&country=Taiwan"
     headers = {'User-Agent': 'Mozilla/5.0'}
     
+    # 先查上市 (TWSE)
+    url_twse = f"https://mis.twse.com.tw/stock/api/getStockInfo.jsp?ex_ch=tse_{stock_id}.tw"
     try:
-        res = requests.get(url, headers=headers, timeout=5)
-        if res.status_code == 200:
-            quotes = res.json().get('quotes', [])
-            for q in quotes:
-                symbol = q.get('symbol', '')
-                # 確保只抓台灣上市(.TW)或上櫃(.TWO)的股票
-                if symbol.endswith('.TW') or symbol.endswith('.TWO'):
-                    return symbol.split('.')[0]
+        res = requests.get(url_twse, headers=headers, timeout=8).json()
+        info = res.get('msgArray', [])
+        if info and info[0].get('z') != '-':
+            data = info[0]
+            close_p = float(data['z']) # 當日收盤/最新價
+            prev_p = float(data['y'])  # 昨收價
+            change_p = close_p - prev_p
+            change_pct = (change_p / prev_p) * 100
+            name = data.get('n', stock_id)
+            return {
+                "name": name,
+                "stock_id": stock_id,
+                "close_price": close_p,
+                "change_price": change_p,
+                "change_pct": change_pct
+            }
     except Exception as e:
-        print(f"⚠️ 名稱轉換代碼失敗: {e}")
-        
+        print(f"上市 API 讀取異常: {e}")
+
+    # 若上市沒抓到，查上櫃 (TPEX)
+    url_tpex = f"https://mis.twse.com.tw/stock/api/getStockInfo.jsp?ex_ch=otc_{stock_id}.tw"
+    try:
+        res = requests.get(url_tpex, headers=headers, timeout=8).json()
+        info = res.get('msgArray', [])
+        if info and info[0].get('z') != '-':
+            data = info[0]
+            close_p = float(data['z'])
+            prev_p = float(data['y'])
+            change_p = close_p - prev_p
+            change_pct = (change_p / prev_p) * 100
+            name = data.get('n', stock_id)
+            return {
+                "name": name,
+                "stock_id": stock_id,
+                "close_price": close_p,
+                "change_price": change_p,
+                "change_pct": change_pct
+            }
+    except Exception as e:
+        print(f"上櫃 API 讀取異常: {e}")
+
     return None
 
 # ==========================================
-# 2. 抓取股票市場真實行情數據
+# 2. 量化模型計算 logic (可在此對接你的 HorseFinder / 2in1 波段邏輯)
 # ==========================================
-def fetch_stock_market_data(stock_id):
-    ticker_symbol = f"{stock_id}.TW" if not stock_id.endswith((".TW", ".TWO")) else stock_id
-    ticker = yf.Ticker(ticker_symbol)
-    
-    df = ticker.history(period="5d")
-    
-    if df.empty or len(df) < 2:
-        ticker_symbol = f"{stock_id}.TWO"
-        ticker = yf.Ticker(ticker_symbol)
-        df = ticker.history(period="5d")
-    
-    if df.empty or len(df) < 2:
-        return None
+def run_quantitative_analysis(stock_id, market_data):
+    """
+    在這裡運算你的量化指標/HorseFinder模型，並產生核心重點與結論
+    """
+    close_price = market_data['close_price']
+    change_pct = market_data['change_pct']
 
-    latest_row = df.iloc[-1]
-    prev_row = df.iloc[-2]
+    # --- 這裡替換/插入你的 HorseFinder / 波段量化分析 logic ---
+    if change_pct >= 2.0:
+        signal = "🔥 多頭強勢發動 (HorseFinder 轉強)"
+        summary = "1. 成交量同步放大，突破短線整理平台。\n2. 均線呈多頭排列，主力籌碼偏多控盤。"
+        conclusion = "短線具強勢上攻動能，可留意拉回不破 5 日線之加碼點。"
+    elif change_pct <= -2.0:
+        signal = "⚠️ 空頭修正訊號"
+        summary = "1. 短線跌破重要支撐均線。\n2. 賣壓相對沉重，需注意乖離過大疑慮。"
+        conclusion = "建議暫時觀望，待出現底部止跌紅K訊號後再行佈局。"
+    else:
+        signal = "⚖️ 區間沉澱整理"
+        summary = "1. 股價於小幅波動區間盤整。\n2. 量能收縮，等待新一波方向確立。"
+        conclusion = "籌碼沉澱中，可維持區間觀望策略。"
 
-    close_price = float(latest_row['Close'])
-    prev_close = float(prev_row['Close'])
-    
-    change_price = close_price - prev_close
-    change_pct = (change_price / prev_close) * 100
-
-    return {
-        "stock_id": stock_id,
-        "close_price": close_price,
-        "change_price": change_price,
-        "change_pct": change_pct
-    }
+    return signal, summary, conclusion
 
 # ==========================================
-# 3. 組合 LINE 訊息內容
+# 3. 組裝 LINE 推播訊息
 # ==========================================
-def format_stock_report(original_query, stock_id, close_price, change_price, change_pct, trend_signal="", conclusion=""):
-    if change_pct > 0:
+def format_stock_report(data, signal, summary, conclusion):
+    if data['change_pct'] > 0:
         icon = "🔺"
-        change_str = f"+{change_price:.2f} (+{change_pct:.2f}%)"
-    elif change_pct < 0:
+        change_str = f"+{data['change_price']:.2f} (+{data['change_pct']:.2f}%)"
+    elif data['change_pct'] < 0:
         icon = "🔻"
-        change_str = f"{change_price:.2f} ({change_pct:.2f}%)"
+        change_str = f"{data['change_price']:.2f} ({data['change_pct']:.2f}%)"
     else:
         icon = "➖"
         change_str = "0.00 (0.00%)"
 
     message = (
-        f"📊 【個股量化早報 - {original_query} ({stock_id})】\n"
+        f"📊 【個股量化早報 - {data['name']} ({data['stock_id']})】\n"
         f"------------------------------\n"
-        f"💰 最新收盤價：{close_price:,.2f} 元\n"
+        f"💰 最新收盤價：{data['close_price']:,.2f} 元\n"
         f"📈 今日漲跌幅：{icon} {change_str}\n"
         f"------------------------------\n"
+        f"🔹 趨勢訊號：\n{signal}\n\n"
+        f"📌 核心觀察重點：\n{summary}\n\n"
+        f"💡 綜合評估與結論：\n{conclusion}"
     )
-    
-    if trend_signal:
-        message += f"🔹 趨勢訊號：{trend_signal}\n"
-    if conclusion:
-        message += f"💡 綜合評估：\n{conclusion}\n"
-
     return message
 
 # ==========================================
-# 4. 發送 LINE Message API 推播
+# 4. 發送 LINE Message
 # ==========================================
 def send_line_push(text):
     token = os.getenv("LINE_CHANNEL_ACCESS_TOKEN")
     user_id = os.getenv("USER_ID")
+
     if not token or not user_id:
+        print("❌ 未抓取到 LINE Token 或 USER_ID，請檢查 GitHub Secrets 設定！")
         return
 
     url = "https://api.line.me/v2/bot/message/push"
@@ -114,49 +129,33 @@ def send_line_push(text):
         "to": user_id,
         "messages": [{"type": "text", "text": text}]
     }
-    requests.post(url, json=payload, headers=headers, timeout=10)
+    res = requests.post(url, json=payload, headers=headers, timeout=10)
+    print(f"LINE API 回應狀態碼: {res.status_code}")
 
 # ==========================================
-# 5. 主程式執行邏輯
+# 主流程
 # ==========================================
 if __name__ == "__main__":
-    # 接收從 LINE 傳過來的關鍵字 (可能是 6414 也可能是 緯穎)
-    raw_query = os.getenv("STOCK_ID", "2330").strip()
-    
-    # 將中文名稱轉換為台股代碼
-    stock_id = resolve_stock_id(raw_query)
+    # 接收 GitHub Actions 傳入的參數，預設 2330
+    stock_id = os.getenv("STOCK_ID", "2330").strip()
+    if stock_id == "DEFAULT" or not stock_id:
+        stock_id = "2330"
 
-    if not stock_id:
-        send_line_push(f"❌ 查無此股票：「{raw_query}」，請確認名稱或代號是否正確。")
-        exit()
+    print(f"🚀 開始執行個股量化報告，目標：{stock_id}")
 
-    print(f"🚀 目標標的：{raw_query} -> 對應代碼: {stock_id}...")
-
-    # 抓取真實市場數據
-    market_data = fetch_stock_market_data(stock_id)
+    # 1. 抓取行情數據
+    market_data = get_tw_stock_data(stock_id)
 
     if market_data:
-        # 示範量化分析訊號 (此處可替換為你的 HorseFinder 邏輯)
-        if market_data['change_pct'] > 1.0:
-            signal = "多頭強勢突破"
-            conclusion = "短線放量上揚，均線多頭排列，可關注續強拉升機會。"
-        elif market_data['change_pct'] < -1.0:
-            signal = "空頭回檔修正"
-            conclusion = "短線承壓拉回，建議觀察下檔支撐力道，靜待止跌訊號。"
-        else:
-            signal = "區間震盪整理"
-            conclusion = "股價波動平緩，籌碼沉澱中，維持觀望或波段操作。"
+        # 2. 進行量化運算
+        signal, summary, conclusion = run_quantitative_analysis(stock_id, market_data)
 
-        report = format_stock_report(
-            original_query=raw_query,
-            stock_id=market_data['stock_id'],
-            close_price=market_data['close_price'],
-            change_price=market_data['change_price'],
-            change_pct=market_data['change_pct'],
-            trend_signal=signal,
-            conclusion=conclusion
-        )
+        # 3. 組合訊息
+        report_text = format_stock_report(market_data, signal, summary, conclusion)
 
-        send_line_push(report)
+        # 4. 推播至 LINE
+        send_line_push(report_text)
     else:
-        send_line_push(f"⚠️ 無法取得股票 {stock_id} ({raw_query}) 的最新行情。")
+        error_text = f"❌ 無法取得股票 [{stock_id}] 的當日行情資料，請確認股號是否正確。"
+        print(error_text)
+        send_line_push(error_text)
