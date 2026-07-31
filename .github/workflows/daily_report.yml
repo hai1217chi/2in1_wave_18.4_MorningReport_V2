@@ -19,45 +19,47 @@ permissions:
 jobs:
   run-report:
     runs-on: ubuntu-latest
- steps:
-  # STREAMING_CHUNK:Checking out repository code...
-  - name: Checkout code
-    uses: actions/checkout@v4
+    steps:
+    # STREAMING_CHUNK:Checking out repository code...
+    - name: Checkout code
+      uses: actions/checkout@v4
+  
+    # STREAMING_CHUNK:Setting up Python environment...
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+        cache: 'pip'
+  
+    # STREAMING_CHUNK:Installing dependencies...
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+  
+    # STREAMING_CHUNK:Executing main Python script with environment variables...
+    - name: Execute Main Script
+      env:
+        # LINE 與 觸發參數
+        LINE_CHANNEL_ACCESS_TOKEN: ${{ secrets.LINE_CHANNEL_ACCESS_TOKEN }}
+        USER_ID: ${{ secrets.USER_ID }}
+        STOCK_QUERY: ${{ github.event.client_payload.query }}
+        RUN_MODE: ${{ github.event.client_payload.mode }}
+        TARGET_USER_ID: ${{ github.event.client_payload.user_id }}
+        
+        # 晨報與 Email 相關 Secrets (若執行晨報模式時使用)
+        EMAIL_SENDER: ${{ secrets.EMAIL_SENDER }}
+        EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
+        RECEIVER_EMAIL: ${{ secrets.RECEIVER_EMAIL }}
+        GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      run: python main.py
 
-  # STREAMING_CHUNK:Setting up Python environment...
-  - name: Set up Python
-    uses: actions/setup-python@v5
-    with:
-      python-version: '3.10'
-      cache: 'pip'
-
-  # STREAMING_CHUNK:Installing dependencies...
-  - name: Install dependencies
-    run: |
-      python -m pip install --upgrade pip
-      if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-
-  # STREAMING_CHUNK:Executing main Python script with environment variables...
-  - name: Execute Main Script
-    env:
-      # LINE 與 觸發參數
-      LINE_CHANNEL_ACCESS_TOKEN: ${{ secrets.LINE_CHANNEL_ACCESS_TOKEN }}
-      USER_ID: ${{ secrets.USER_ID }}
-      STOCK_QUERY: ${{ github.event.client_payload.query }}
-      RUN_MODE: ${{ github.event.client_payload.mode }}
-      TARGET_USER_ID: ${{ github.event.client_payload.user_id }}
       
-      # 晨報與 Email 相關 Secrets (若執行晨報模式時使用)
-      EMAIL_SENDER: ${{ secrets.EMAIL_SENDER }}
-      EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
-      RECEIVER_EMAIL: ${{ secrets.RECEIVER_EMAIL }}
-      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-    run: python main.py
-      - name: 更新 Dashboard（把 docs/ 變更 commit 回 repo）
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add docs
-          git diff --cached --quiet || git commit -m "📊 更新每日 Dashboard $(date +'%Y-%m-%d')"
-          git push
+        - name: 更新 Dashboard（把 docs/ 變更 commit 回 repo）
+          run: |
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add docs
+            git diff --cached --quiet || git commit -m "📊 更新每日 Dashboard $(date +'%Y-%m-%d')"
+            git push
