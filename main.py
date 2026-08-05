@@ -2,7 +2,7 @@
 """
 每日主流程與單股量化分析（GitHub Actions 用）
 ================================
-支援兩種執行模式（由環境變數 RUN_MODE 控制）：
+支援三種執行模式（由環境變數 RUN_MODE 控制）：
 
 1. morning_report（全盤晨報模式）：
    - 抓取市場快照 + 新聞（market.py）
@@ -12,9 +12,14 @@
    - 發送 Resend Email 附帶 Excel 與 PDF 報告
    - LINE 廣播與更新 Dashboard 網頁儀表板（dashboard.py）
 
-2. single_stock（單股量化分析模式）：
+2. portfolio（持股清單模式）：
+   - 分析 Google Sheets 中的持股清單
+   - 呼叫 Gemini 產生專屬 AI 持股操作建議
+   - 推播分析報告至 LINE 並備份寄送 Email
+
+3. single_stock（單股量化分析模式）：
    - 針對輸入的股號或公司名稱查詢 TWSE / TPEX 最新行情
-   - 進行波段量化指標分析
+   - 呼叫 Gemini AI 進行深度波段量化與籌碼技術觀點分析
    - 產生分析結論並透過 LINE Push API 即時推播給指定使用者
 """
 
@@ -39,7 +44,7 @@ import portfolio
 CATEGORIES = {
     "權值股": "630045424",
     # "面板股": "1749860219",
-    # "AI概念股": "0",
+    "AI概念股": "0",
     # "國防自主概念": "2037567856",
     # "低軌衛星概念股": "1594256368",
     # "無人機概念股": "327999020",
@@ -50,7 +55,7 @@ PORTFOLIO_GID = "213589368"
 
 RESEND_API_URL = "https://api.resend.com/emails"
 FROM_EMAIL = "Stock Report <onboarding@resend.dev>"
-TO_EMAIL = os.environ.get("TO_EMAIL", "hai1217.chi@gmail.com")
+TO_EMAIL = os.environ.get("TO_EMAIL") or os.environ.get("RECEIVER_EMAIL") or "hai1217.chi@gmail.com"
 
 
 # ==========================================
@@ -148,48 +153,66 @@ def fetch_stock_market_data(stock_id):
 
 
 # ==========================================
-# 個股查詢 3: 波段量化分析邏輯
+# 個股查詢 3: Gemini AI 個股波段分析
 # ==========================================
-def analyze_quantitative_stock(stock_id, market_data):
-    """產出單股量化分析觀點與結論。"""
-    try:
-        if hasattr(engine, 'run_stock_analysis'):
-            return engine.run_stock_analysis(stock_id, market_data)
-    except Exception as e:
-        print(f"⚠️ 呼叫自訂 engine 個股模組失敗，切換至預設波段邏輯: {e}")
+def analyze_stock_with_ai(stock_id, market_data):
+    """整合 Gemini AI 進行個股即時行情波段研判。"""
+    gemini_key = os.getenv("GEMINI_API_KEY")
+    change_sign = "+" if market_data['change_pct'] > 0 else ""
+    change_str = f"{change_sign}{market_data['change_price']:.2f} ({change_sign}{market_data['change_pct']:.2f}%)"
 
+    prompt = f"""
+你是一位台股權威量化與技術面分析師。請針對【{market_data['name']} ({stock_id})】的當日盤後最新數據進行專業評估：
+- 最新收盤價：{market_data['close_price']} 元
+- 當日漲跌：{change_str}
+- 最高價：{market_data['high']} 元 | 最低價：{market_data['low']} 元
+- 成交量：{market_data['volume']} 股
+
+請精簡簡潔地產出以下三個區塊的分析結論（請依照以下標題與條列格式）：
+
+🎯 趨勢訊號：
+（例如：🔥 多頭強勢衝刺 / 📈 溫和偏多增溫 / ⚖️ 橫盤區間震盪 / ⚠️ 短線修正壓回，並提供一句話原因）
+
+📌 核心量化/技術觀點：
+1. 觀察價量關係與短均線架構。
+2. 指標型態與主力籌碼觀察。
+
+💡 綜合評估與操作建議：
+（說明 short-term 移動停利/止損參考，觀望或偏多操作指南）
+"""
+
+    if gemini_key:
+        try:
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={gemini_key}"
+            payload = {"contents": [{"parts": [{"text": prompt}]}]}
+            res = requests.post(url, json=payload, timeout=15)
+            if res.status_code == 200:
+                result = res.json()
+                ai_text = result['candidates'][0]['content']['parts'][0]['text']
+                return ai_text.strip()
+        except Exception as e:
+            print(f"⚠️ Gemini AI 呼叫異常，切換至備用邏輯: {e}")
+
+    # Fallback 備用規則
     change_pct = market_data['change_pct']
     if change_pct >= 3.0:
-        trend = "🔥 多頭強勢衝刺 (HorseFinder 強勢訊號)"
-        highlights = (
-            "1. 攻擊量能釋放，強勢突破短期均線糾結帶。\n"
-            "2. 波段指標呈黃金交叉，主力籌碼偏多控盤。\n"
-            "3. 乖離率略拉高，但短線動能極強。"
+        return (
+            "🎯 趨勢訊號：\n🔥 多頭強勢衝刺\n\n"
+            "📌 核心量化/技術觀點：\n1. 攻擊量能釋放，強勢突破短期均線帶。\n2. 短線動能極強，偏多控盤。\n\n"
+            "💡 綜合評估與操作建議：\n沿 5 日線採移動停利策略，偏多操作。"
         )
-        conclusion = "短線仍有上攻空間，可採 5 日線移動停利策略，沿均線偏多操作。"
-    elif 0.5 <= change_pct < 3.0:
-        trend = "📈 溫和偏多增溫"
-        highlights = (
-            "1. 股價沿短均線穩健爬升，量價配合良好。\n"
-            "2. 支撐位有效防守，籌碼沉澱狀況良好。"
+    elif change_pct >= 0:
+        return (
+            "🎯 趨勢訊號：\n📈 溫和偏多增溫\n\n"
+            "📌 核心量化/技術觀點：\n1. 股價沿短均線穩健爬升，量價配合良好。\n2. 支撐位有效防守。\n\n"
+            "💡 綜合評估與操作建議：\n多頭格局未變，拉回至關鍵均線不破可留意佈局機會。"
         )
-        conclusion = "趨勢維持多頭格局，拉回至關鍵均線不破皆可留意佈局機會。"
-    elif -2.0 < change_pct < 0.5:
-        trend = "⚖️ 橫盤區間震盪"
-        highlights = (
-            "1. 價位在多空交界區橫向整理，量能稍微萎縮。\n"
-            "2. 觀望氣氛較濃，等待方向突破。"
-        )
-        conclusion = "建議維持區間操作觀望，待出現明確增量突破或止跌紅K再行進場。"
     else:
-        trend = "⚠️ 短線修正/壓回"
-        highlights = (
-            "1. 賣壓相對沉重，跌破短期移動平均線。\n"
-            "2. 短線技術指標轉弱，下方尋求關鍵支撐。"
+        return (
+            "🎯 趨勢訊號：\n⚠️ 短線修正/壓回\n\n"
+            "📌 核心量化/技術觀點：\n1. 賣壓相對沉重，跌破短期移動平均線。\n2. 下方尋求關鍵支撐。\n\n"
+            "💡 綜合評估與操作建議：\n短線風險升溫，建議觀望避開修正，待底部止跌訊號確立。"
         )
-        conclusion = "短線風險升溫，建議暫時觀望避開修正，待底部止跌訊號確立。"
-
-    return trend, highlights, conclusion
 
 
 # ==========================================
@@ -221,7 +244,7 @@ def send_line_push(text, target_user_id=None):
 
 
 def run_single_stock_flow(query, target_user_id=None):
-    """單股查詢完整流程。"""
+    """單股查詢完整流程（整合 AI 個股分析）。"""
     if not query or query == "DEFAULT":
         query = "2330"
 
@@ -235,7 +258,7 @@ def run_single_stock_flow(query, target_user_id=None):
         send_line_push(err_msg, target_user_id)
         return
 
-    trend, highlights, conclusion = analyze_quantitative_stock(stock_id, market_data)
+    ai_analysis = analyze_stock_with_ai(stock_id, market_data)
 
     if market_data['change_pct'] > 0:
         icon = "🔺"
@@ -253,9 +276,7 @@ def run_single_stock_flow(query, target_user_id=None):
         f"💰 最新收盤價：{market_data['close_price']:,.2f} 元\n"
         f"📈 今日漲跌幅：{icon} {change_str}\n"
         f"----------------------------------\n"
-        f"🎯 趨勢訊號：\n{trend}\n\n"
-        f"📌 核心量化觀點：\n{highlights}\n\n"
-        f"💡 綜合評估與結論：\n{conclusion}\n"
+        f"{ai_analysis}\n"
         f"----------------------------------\n"
         f"⏱ 報告生成時間：{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
     )
