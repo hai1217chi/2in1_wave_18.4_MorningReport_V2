@@ -29,11 +29,13 @@ jobs:
             python-version: '3.10'
             cache: 'pip'
       
+        # STREAMING_CHUNK:Installing dependencies...
         - name: Install dependencies
           run: |
             python -m pip install --upgrade pip
             if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
       
+        # STREAMING_CHUNK:Executing Python main script with environment variables...
         - name: Execute Main Script
           env:
             # LINE API 與目標發送者 ID
@@ -45,12 +47,17 @@ jobs:
             STOCK_QUERY: ${{ github.event.client_payload.query || inputs.query || '2330' }}
             RUN_MODE: ${{ github.event.client_payload.mode || inputs.mode || (github.event_name == 'schedule' && 'morning_report' || 'single_stock') }}
       
-            # 晨報、AI 摘要與 Email 相關 Secrets
+            # 信件寄送 Resend API 與收件者 Secrets
+            RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+            TO_EMAIL: ${{ secrets.TO_EMAIL || secrets.RECEIVER_EMAIL }}
             EMAIL_SENDER: ${{ secrets.EMAIL_SENDER }}
             EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
             RECEIVER_EMAIL: ${{ secrets.RECEIVER_EMAIL }}
+      
+            # AI 金鑰與資料來源 Token
             GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
             OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+            FINMIND_TOKEN: ${{ secrets.FINMIND_TOKEN }}
           run: python main.py
 
       
