@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<title>每日 AI 晨報 Dashboard - 2026-10-23</title>
+<style>
+body { font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", Arial, sans-serif;
+       background:#f4f5f7; margin:0; padding:24px; color:#222; }
+h1 { font-size:22px; }
+.date { color:#888; margin-bottom:20px; }
+.grid { display:flex; flex-wrap:wrap; gap:16px; }
+.card { background:#fff; border-radius:12px; padding:18px 20px; width:320px;
+        box-shadow:0 1px 4px rgba(0,0,0,0.08); }
+.card h2 { margin:0 0 8px 0; font-size:18px; }
+.tag { display:inline-block; padding:2px 8px; border-radius:6px; font-size:12px;
+       background:#eef2ff; color:#3949ab; margin-right:6px; }
+.risk-NORMAL { background:#e8f5e9; color:#2e7d32; }
+.risk-CAUTION { background:#fff8e1; color:#f9a825; }
+.risk-HIGH_RISK { background:#ffebee; color:#c62828; }
+.risk-CRASH { background:#efebe9; color:#4e342e; }
+.signals { margin:10px 0; font-size:13px; color:#444; }
+.stocks { margin:10px 0; font-size:14px; }
+.one-liner { margin-top:10px; padding-top:10px; border-top:1px dashed #ddd;
+             font-size:13px; color:#555; line-height:1.5; font-weight:600; }
+.full-briefing { margin-top:10px; font-size:13px; }
+.full-briefing summary { cursor:pointer; color:#3949ab; font-weight:600; }
+.briefing-body { margin-top:10px; line-height:1.7; font-size:13px; color:#333; }
+.briefing-body h2, .briefing-body h3 { font-size:14px; margin:14px 0 6px 0; color:#1a237e; }
+.briefing-body p { margin:4px 0; }
+.market-card { width:100%; }
+.overview-card { width:100%; }
+.overview-card h3 { font-size:14px; margin:10px 0 4px 0; color:#1a237e; }
+.overview-card p { margin:4px 0; font-size:13px; line-height:1.7; }
+.market-card table { border-collapse:collapse; margin:6px 0 12px 0; font-size:13px; }
+.market-card td { padding:3px 10px 3px 0; }
+.market-card .up { color:#c62828; }
+.market-card .down { color:#2e7d32; }
+.archive { margin-top:30px; font-size:13px; }
+.archive a { color:#3949ab; text-decoration:none; margin-right:10px; }
+.disclaimer { margin-top:24px; font-size:12px; color:#999; }
+</style>
+</head>
+<body>
+<h1>📊 每日 AI 晨報 Dashboard</h1>
+<div class="date">2026-10-23 自動產生</div>
+<div class="grid">
+
+    <div class="card overview-card">
+        <h2>🗞️ 市場總覽</h2>
+        <h3>今天盤勢</h3>
+<p>今日全球市場呈現顯著分歧態勢。台股加權指數逆勢上漲 1.28%，表現相對強勁。然而，美股科技股壓力巨大，那斯達克指數下跌 2.6%，S&P 500 下跌 1.21%，尤以費城半導體指數暴跌 6.72% 最為顯著，顯示科技與半導體類股正承受沉重賣壓。國際方面，VIX恐慌指數飆升逾 14%，反映市場避險情緒急劇升高；美債10年殖利率顯著下跌近 4%並跌破 5%關卡，資金明顯流向避險資產。儘管美元指數微幅走弱，但黃金也同步下跌，原油價格則因地緣政治風險而上漲。整體而言，台股雖逆勢收紅，但美股科技與半導體類股的重挫，以及全球避險情緒的升溫，預示著台股未來可能面臨更大的壓力傳導，需謹慎應對。</p>
+<br>
+<h3>國際新聞觀察</h3>
+<p>1.  **美債殖利率跌破5%與Fed利率展望：** 10年期美債殖利率顯著跌破5%，創今年銀行危機以來最大降幅，此現象反映市場對經濟前景的擔憂，資金轉向避險資產。這可能意味著市場預期聯準會升息週期即將結束，甚至為未來降息預作準備，對全球資金流向和風險資產的偏好將產生結構性影響。</p>
+<p>2.  **費半指數與台積電ADR重挫：** 費城半導體指數單日暴跌近7%，帶動台積電ADR同步下挫。此為今日最直接衝擊台股的利空訊息，特別是對於佔台股權重極高的半導體產業。這不僅反映市場對AI概念股的高估值產生疑慮，也可能對台股權值股及整體市場情緒造成巨大壓力。</p>
+<p>3.  **AI產業競爭與疑慮浮現：** 雖然NVIDIA及OpenAI新聞多數偏向產品進展與正面融資消息，但結合費半重挫，顯示市場對於AI產業的「算力需求」與「競爭格局」已產生新的審視。Google與亞馬遜從軟體層面挑戰NVIDIA CUDA生態系，長期可能改變AI產業的競爭版圖，影響台灣AI供應鏈相關廠商的未來獲利前景。</p>
+    </div>
+    
+
+    <div class="card market-card">
+        <h2>🌍 市場快照</h2>
+        <b>台股</b><table><tr><td>加權指數</td><td>46887.77</td><td class="up">1.28%</td></tr></table><b>美股</b><table><tr><td>道瓊</td><td>52867.98</td><td class="up">0.02%</td></tr><tr><td>那斯達克</td><td>26008.86</td><td class="down">-2.6%</td></tr><tr><td>S&P500</td><td>7663.43</td><td class="down">-1.21%</td></tr><tr><td>費半SOX</td><td>10731.98</td><td class="down">-6.72%</td></tr></table><b>國際</b><table><tr><td>VIX恐慌指數</td><td>19.03</td><td class="up">14.09%</td></tr><tr><td>美元指數DXY</td><td>101.54</td><td class="down">-0.23%</td></tr><tr><td>美債10年殖利率</td><td>4.95</td><td class="down">-3.75%</td></tr><tr><td>黃金</td><td>4043.1</td><td class="down">-2.58%</td></tr><tr><td>原油WTI</td><td>99.22</td><td class="up">2.13%</td></tr></table>
+    </div>
+    
+
+    <div class="card">
+        <h2>權值股</h2>
+        <span class="tag risk-CAUTION">風險模式：CAUTION</span>
+        <span class="tag">市場模式：SIDEWAYS</span>
+        <div class="signals">訊號分布：買入:2檔 🔍 觀察:12檔 觀望:1檔 減碼:2檔 賣出:2檔</div>
+        <div class="stocks"><b>推薦關注：</b>2454 聯發科、3711 日月光投控、2891 中信金</div>
+        <div class="one-liner">💡 在全球警戒與市場盤整格局下，今日權值股操作宜審慎篩選AI確認買進的強勢股，同時密切觀察具備潛在爆發力的黑馬股，而對大多數標的則以觀望為主，並嚴控風險。</div>
+        <details class="full-briefing">
+            <summary>📋 查看完整 AI 晨報內容</summary>
+            <div class="briefing-body"><h3>今日操作策略</h3>
+<p>今日權值股數據顯示，整體市場仍處於「SIDEWAYS」盤整模式，且「風險模式」為「CAUTION」，並伴隨「全球警戒」訊息，暗示美股（NASDAQ -2.6%）及VIX指數（19.0）帶來外部壓力，建議縮減資金。在19檔權值股中，僅有2檔獲得「🟢 正常買進」訊號，多數個股（13檔）因AI信心不足而轉為「🔍 觀察」，另有4檔為「🔴 減碼/賣出」或「觀望」。整體策略應保持審慎，嚴格篩選AI確認的買進標的，對於多數股票則以觀察為主，並避免追價，尤其應避開明確的減碼與賣出訊號。</p>
+<br>
+<h3>類股輪動觀察</h3>
+<p>根據「類股資金輪動熱度排行」，目前「其他」類股及「ETF」類股的熱度分數皆為50.0分。這表示資金並未特別集中於特定權值類股，也沒有出現顯著的資金退潮警示（分數低於35）。在當前市場模式為「SIDEWAYS」且「風險模式」為「CAUTION」下，類股熱度中性代表市場缺乏明確主流，資金流向分散。操作上，應避免過度追逐短期題材，反而可以留意在熱度中性下，具備獨立利基或特定公司表現突出的個股。</p>
+<br>
+<h3>黑馬股觀察</h3>
+<p>在「黑馬排行榜」中，有幾檔值得關注的短線黑馬候選股：</p>
+<p>*   **2412 中華電 (HorseScore: 35):** 評分細項指出「20日新高、ADX>25、法人連買」。20日新高顯示股價突破近期壓力，ADX>25意味著趨勢動能增強，配合法人連續買超，短線爆發力訊號強勁。</p>
+<p>*   **2409 友達 (HorseScore: 35):** 評分細項揭示「通道窄<10%分位、ADX>25、法人連買」。通道窄（例如BBands壓縮）暗示股價波動收斂已久，可能醞釀突破，加上ADX>25和法人買超，具備短線變盤的潛力。</p>
+<p>*   **3037 欣興 (HorseScore: 30):** 評分細項為「BB擠壓、法人連買」。與友達類似，BB擠壓是波動壓縮的經典訊號，顯示股價可能處於盤整末期，配合法人資金進場，短線有機會向上表態。</p>
+<br>
+<p>須提醒的是，黑馬評分著重於短線爆發力訊號，例如波動壓縮後的突破、趨勢動能加強、法人籌碼面變化等，但這不代表AI對其趨勢方向有足夠的信心。例如中華電和友達在權值股數據中，其「最終決策」皆為「🔍 觀察」，顯示AI上漲機率未達動態門檻。因此，對這些黑馬股的短線操作仍需謹慎，並搭配盤中走勢確認。</p>
+<br>
+<h3>風險提醒</h3>
+<p>目前的「風險模式」為「CAUTION」，「市場模式」為「SIDEWAYS」，整體環境偏向保守。多數個股的「AI信心等級」為★☆☆☆☆，且有多個「AI Decision Gate」機制啟動，將原有的買入或持平訊號鎖定為「🔍 觀察」，主因是「AI上漲機率」未達動態門檻，顯示AI對個股方向判斷信心不足。同時，「操作建議」中普遍提及「全球警戒」，並關注VIX（19.0）及NASDAQ表現（-2.6%），反映外部市場風險可能對台股權值股造成壓力。此外，排名較後的股票如鴻海、台達電、聯電、友達等已出現明確的「減碼」或「賣出」訊號，且趨勢評級為低星或零星，顯示這些個股下行風險較高。</p>
+<br>
+<h3>推薦股票</h3>
+<p>考量整體市場的「CAUTION」與「SIDEWAYS」模式，以及AI信心普遍不足的情況，我們的選股策略將更為審慎，主要聚焦於AI確認的買進標的，並輔以具備潛力的觀察股。</p>
+<br>
+<p>1.  **2454 聯發科：** 儘管「AI信心等級」僅為★☆☆☆☆，但其「最終決策」仍為「🟢 正常買進（AI確認，Horse未達標）」，這是當前數據中少數獲得AI確認買入的標的。其「5日預測動能」和「20日預測趨勢」均高達9%以上，顯示上漲動能與趨勢強勁。歷史波段勝率50%及Profit Factor 2.03、Expectancy 1.27也相對穩健。同時，黑馬細項中也有「法人連買」的支持。在整體偏保守的市場中，聯發科是目前唯一綜合表現較為突出的買進標的。</p>
+<br>
+<p>2.  **3711 日月光投控：** 同樣獲得「🟢 正常買進（AI確認，Horse未達標）」的「最終決策」。其「5日預測動能」5.86%和「20日預測趨勢」6.78%亦屬權值股中的前段班。雖然歷史波段勝率40%與聯發科相比較低，但Profit Factor 1.14仍是正向。此檔與聯發科為唯二AI確認買進的標的，具有相對的價值。黑馬細項亦有「法人連買」。</p>
+<br>
+<p>3.  **3037 欣興：** 儘管「最終決策」被「AI Decision Gate」鎖定為「🔍 觀察」，其「AI上漲機率」僅37.8%，但其潛在量化數據值得關注：「20日預測趨勢」高達11.26%，是所有權值股中最高，顯示長期趨勢潛力。更重要的是，其「歷史波段勝率」高達67% (4/6)，「Profit Factor」9.97和「Expectancy」3.99在所有個股中表現極為優異。加上黑馬榜上顯示「BB擠壓、法人連買」，暗示股價經過盤整後有機會醞釀突破。因此，欣興雖然目前為觀察，但其長期量化潛力和短線黑馬訊號使其成為值得密切追蹤的標的，一旦AI信心回升，將是優先考慮的佈局對象。</p>
+<br>
+<h3>一句總結</h3>
+<p>在全球警戒與市場盤整格局下，今日權值股操作宜審慎篩選AI確認買進的強勢股，同時密切觀察具備潛在爆發力的黑馬股，而對大多數標的則以觀望為主，並嚴控風險。</p></div>
+        </details>
+    </div>
+    
+
+    <div class="card">
+        <h2>AI概念股</h2>
+        <span class="tag risk-CAUTION">風險模式：CAUTION</span>
+        <span class="tag">市場模式：SIDEWAYS</span>
+        <div class="signals">訊號分布：🔍 觀察:25檔 持平觀望:1檔 觀望:6檔 減碼:8檔 賣出:3檔</div>
+        <div class="stocks"><b>推薦關注：</b>2454 聯發科、3163O 波若威、2357 華碩</div>
+        <div class="one-liner">💡 （無總結）</div>
+        <details class="full-briefing">
+            <summary>📋 查看完整 AI 晨報內容</summary>
+            <div class="briefing-body"><p>（AI 晨報生成失敗，本次僅提供 Excel 數據，請見附件。）</p></div>
+        </details>
+    </div>
+    
+
+    <div class="card">
+        <h2>我的持股</h2>
+        <span class="tag risk-CAUTION">風險模式：CAUTION</span>
+        <span class="tag">市場模式：SIDEWAYS</span>
+        <div class="signals">訊號分布：🔍 觀察:3檔 觀望:1檔</div>
+        <div class="stocks"><b>推薦關注：</b>3231 緯創、6414 樺漢、00673R 期元大S&P原油反1</div>
+        <div class="one-liner">💡 （無總結）</div>
+        <details class="full-briefing">
+            <summary>📋 查看完整 AI 晨報內容</summary>
+            <div class="briefing-body"><p>（持股操作建議生成失敗，請見附件 Excel 數據。）</p></div>
+        </details>
+    </div>
+    
+</div>
+<div class="archive">
+    <b>歷史紀錄：</b><a href="reports/2026-10-22.html">2026-10-22</a><a href="reports/2026-10-21.html">2026-10-21</a><a href="reports/2026-10-20.html">2026-10-20</a><a href="reports/2026-10-19.html">2026-10-19</a><a href="reports/2026-10-17.html">2026-10-17</a><a href="reports/2026-10-16.html">2026-10-16</a><a href="reports/2026-10-15.html">2026-10-15</a><a href="reports/2026-10-14.html">2026-10-14</a><a href="reports/2026-10-13.html">2026-10-13</a><a href="reports/2026-10-12.html">2026-10-12</a><a href="reports/2026-10-10.html">2026-10-10</a><a href="reports/2026-10-09.html">2026-10-09</a><a href="reports/2026-10-08.html">2026-10-08</a><a href="reports/2026-10-07.html">2026-10-07</a>
+</div>
+<div class="disclaimer">內容為量化模型 + AI 輸出，僅供參考，不構成投資建議。</div>
+</body>
+</html>
